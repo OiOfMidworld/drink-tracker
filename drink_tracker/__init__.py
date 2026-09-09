@@ -3,6 +3,7 @@ import os
 from flask import Flask
 from flask_login import LoginManager
 from flask_wtf import CSRFProtect
+from sqlalchemy import inspect, text
 
 from .mailer import mail
 from .models import User, db
@@ -10,6 +11,25 @@ from .models import User, db
 login_manager = LoginManager()
 login_manager.login_view = "auth.login"
 csrf = CSRFProtect()
+
+# db.create_all() only creates tables that don't exist yet — it never alters a table
+# that's already there from an earlier deploy. This patches in columns added after a
+# table already exists in production, without pulling in a full migration framework.
+_USER_COLUMN_MIGRATIONS = {
+    "email": 'ALTER TABLE "user" ADD COLUMN email VARCHAR(255)',
+    "last_reminder_sent_date": 'ALTER TABLE "user" ADD COLUMN last_reminder_sent_date DATE',
+}
+
+
+def _add_missing_columns():
+    inspector = inspect(db.engine)
+    if "user" not in inspector.get_table_names():
+        return
+    existing_columns = {col["name"] for col in inspector.get_columns("user")}
+    for column, ddl in _USER_COLUMN_MIGRATIONS.items():
+        if column not in existing_columns:
+            db.session.execute(text(ddl))
+    db.session.commit()
 
 
 def create_app():
@@ -58,5 +78,6 @@ def create_app():
 
     with app.app_context():
         db.create_all()
+        _add_missing_columns()
 
     return app
