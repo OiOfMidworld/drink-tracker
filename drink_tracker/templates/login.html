@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}Log In - Drink Tracker{% endblock %}
+{% block content %}
+  <div class="auth-card">
+    <h1>Log In</h1>
+    <form method="POST" novalidate>
+      {{ form.hidden_tag() }}
+      <div class="field">
+        {{ form.username.label }}
+        {{ form.username(size=32, autofocus=true) }}
+        {% for error in form.username.errors %}<p class="error">{{ error }}</p>{% endfor %}
+      </div>
+      <div class="field">
+        {{ form.password.label }}
+        {{ form.password(size=32) }}
+        {% for error in form.password.errors %}<p class="error">{{ error }}</p>{% endfor %}
+      </div>
+      {{ form.submit(class="btn btn-primary") }}
+    </form>
+    <p class="auth-switch">No account yet? <a href="{{ url_for('auth.register') }}">Register here</a>.</p>
+  </div>
+{% endblock %}

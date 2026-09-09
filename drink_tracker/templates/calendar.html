@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% block title %}{{ month_name }} {{ year }} - Drink Tracker{% endblock %}
+{% block content %}
+  <div class="calendar-header">
+    <a class="nav-link" href="{{ url_for('main.calendar_view', year=prev_year, month=prev_month) }}">&larr; Prev</a>
+    <h1>{{ month_name }} {{ year }}</h1>
+    <a class="nav-link" href="{{ url_for('main.calendar_view', year=next_year, month=next_month) }}">Next &rarr;</a>
+  </div>
+
+  <div class="legend">
+    {% for code, info in category_info.items() %}
+      <span class="legend-item">
+        <span class="swatch" style="background-color: {{ info.color }};"></span>
+        {{ info.label }} drinks
+      </span>
+    {% endfor %}
+    <span class="legend-item">
+      <span class="swatch swatch-empty"></span>
+      no entry
+    </span>
+  </div>
+
+  <div class="calendar-layout">
+    <div class="avg-card">
+      <div class="avg-label">Avg / Week</div>
+      <div class="avg-value">{{ "%.1f"|format(avg_per_week) }}</div>
+    </div>
+
+    <table class="calendar">
+      <thead>
+        <tr>
+          <th>Sun</th><th>Mon</th><th>Tue</th><th>Wed</th><th>Thu</th><th>Fri</th><th>Sat</th><th>Total</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for week, week_total in weeks_with_totals %}
+          <tr>
+            {% for day in week %}
+              {% if day == 0 %}
+                <td class="day-cell empty"></td>
+              {% else %}
+                {% set iso_date = "%04d-%02d-%02d"|format(year, month, day) %}
+                {% set entry = entry_map.get(day) %}
+                {% set is_future = day in future_days %}
+                <td
+                  class="day-cell {% if entry %}cat-{{ entry.category }}{% endif %} {% if today.year == year and today.month == month and today.day == day %}today{% endif %} {% if is_future %}future{% endif %}"
+                  data-date="{{ iso_date }}"
+                  data-count="{{ entry.count if entry else '' }}"
+                  {% if is_future %}data-future="true"{% endif %}
+                >
+                  <span class="day-number">{{ day }}</span>
+                </td>
+              {% endif %}
+            {% endfor %}
+            <td class="week-total">{{ week_total }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <div id="log-modal" class="modal-overlay" hidden>
+    <div class="modal">
+      <h2 id="modal-date"></h2>
+      <p class="modal-subtitle">How many drinks did you have?</p>
+      <input type="number" id="drink-count-input" class="drink-count-input" min="0" step="1" inputmode="numeric" />
+      <p id="modal-error" class="error" hidden></p>
+      <div class="modal-actions">
+        <button type="button" id="cancel-btn" class="btn btn-secondary">Cancel</button>
+        <button type="button" id="clear-btn" class="btn btn-secondary">Clear</button>
+        <button type="button" id="save-btn" class="btn btn-primary">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="{{ url_for('static', filename='script.js') }}"></script>
+{% endblock %}
