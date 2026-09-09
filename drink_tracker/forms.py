@@ -1,6 +1,6 @@
 from flask_wtf import FlaskForm
 from wtforms import PasswordField, StringField, SubmitField
-from wtforms.validators import DataRequired, EqualTo, Length, ValidationError
+from wtforms.validators import DataRequired, Email, EqualTo, Length, Optional, ValidationError
 
 from .models import User
 
@@ -22,3 +22,11 @@ class LoginForm(FlaskForm):
     username = StringField("Username", validators=[DataRequired()])
     password = PasswordField("Password", validators=[DataRequired()])
     submit = SubmitField("Log In")
+
+
+class SettingsForm(FlaskForm):
+    email = StringField(
+        "Email (for a daily 8am reminder to log last night's drinks)",
+        validators=[Optional(), Email(), Length(max=255)],
+    )
+    submit = SubmitField("Save")

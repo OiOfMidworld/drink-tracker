@@ -12,6 +12,24 @@ services:
         fromDatabase:
           name: drink-tracker-db
           property: connectionString
+      - key: CRON_SECRET
+        generateValue: true
+      - key: APP_TIMEZONE
+        value: America/New_York
+      - key: APP_BASE_URL
+        sync: false
+      - key: MAIL_SERVER
+        value: smtp.gmail.com
+      - key: MAIL_PORT
+        value: 587
+      - key: MAIL_USE_TLS
+        value: "true"
+      - key: MAIL_USERNAME
+        sync: false
+      - key: MAIL_PASSWORD
+        sync: false
+      - key: MAIL_DEFAULT_SENDER
+        sync: false
 
 databases:
   - name: drink-tracker-db

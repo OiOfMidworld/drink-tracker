@@ -89,4 +89,23 @@
   modal.addEventListener("click", (e) => {
     if (e.target === modal) closeModal();
   });
+
+  function openFromQueryParam() {
+    const params = new URLSearchParams(window.location.search);
+    const day = params.get("open");
+    if (!day) return;
+
+    const table = document.querySelector("table.calendar");
+    if (!table) return;
+
+    const iso = `${table.dataset.year}-${table.dataset.month.padStart(2, "0")}-${day.padStart(2, "0")}`;
+    const cell = document.querySelector(`.day-cell[data-date="${iso}"]:not(.empty):not(.future)`);
+    if (cell) openModal(cell);
+
+    const url = new URL(window.location);
+    url.searchParams.delete("open");
+    window.history.replaceState({}, "", url);
+  }
+
+  openFromQueryParam();
 })();

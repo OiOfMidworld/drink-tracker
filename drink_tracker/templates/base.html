@@ -13,6 +13,7 @@
     {% if current_user.is_authenticated %}
       <nav>
         <span class="username">{{ current_user.username }}</span>
+        <a href="{{ url_for('main.settings') }}">Settings</a>
         <a href="{{ url_for('auth.logout') }}">Log out</a>
       </nav>
     {% endif %}

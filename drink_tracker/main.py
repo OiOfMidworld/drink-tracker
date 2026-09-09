@@ -1,10 +1,11 @@
 import calendar as cal_module
 from datetime import date, datetime
 
-from flask import Blueprint, abort, jsonify, redirect, render_template, request, url_for
+from flask import Blueprint, abort, flash, jsonify, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
 from sqlalchemy import extract
 
+from .forms import SettingsForm
 from .models import CATEGORY_INFO, Entry, category_for_count, db
 
 bp = Blueprint("main", __name__)
@@ -81,6 +82,18 @@ def calendar_view(year, month):
         next_year=next_year,
         next_month=next_month,
     )
+
+
+@bp.route("/settings", methods=["GET", "POST"])
+@login_required
+def settings():
+    form = SettingsForm(obj=current_user)
+    if form.validate_on_submit():
+        current_user.email = form.email.data or None
+        db.session.commit()
+        flash("Settings saved.", "success")
+        return redirect(url_for("main.settings"))
+    return render_template("settings.html", form=form)
 
 
 @bp.route("/api/log", methods=["POST"])

@@ -76,6 +76,18 @@ body {
   border: 1px solid #f5c6c2;
 }
 
+.flash-success {
+  background: #eafaf1;
+  color: #1e7e4a;
+  border: 1px solid #b9ecd0;
+}
+
+.field-hint {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin: -0.4rem 0 1rem;
+}
+
 .auth-card {
   max-width: 360px;
   margin: 3rem auto;
