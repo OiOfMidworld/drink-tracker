@@ -7,7 +7,7 @@ Track daily alcoholic drink counts on a color-coded calendar. Each user has thei
 - 4-6 drinks = purple
 - 7+ drinks = black
 
-Users can add their email in Settings to get a daily reminder at 8am asking them to log last night's drinks; the link in the email opens the calendar with that day ready to fill in.
+Users can add their email in Settings to get a daily reminder at 7:35am asking them to log last night's drinks; the link in the email opens the calendar with that day ready to fill in.
 
 Each day can also have a short journal entry (a "check-in"), independent of the drink count. Days with a check-in show a small dot on the calendar. The **Check-ins** tab lists every entry by date, sortable by most recent or oldest.
 
@@ -24,7 +24,7 @@ Visit http://127.0.0.1:5050, register an account, and start logging days by clic
 
 By default, data is stored in a local SQLite file at `instance/drinks.db` (created automatically). Set a `DATABASE_URL` environment variable to point at Postgres instead (used automatically in production, see below).
 
-To test the reminder endpoint locally without real SMTP credentials, set `MAIL_SUPPRESS_SEND=true` — Flask-Mail will skip actually sending. The endpoint only sends between 8:00 and 8:59am in `APP_TIMEZONE` (default `America/New_York`), so outside that window it just reports `{"skipped": true}`:
+To test the reminder endpoint locally without real SMTP credentials, set `MAIL_SUPPRESS_SEND=true` — Flask-Mail will skip actually sending. The endpoint only sends at 7:35am in `APP_TIMEZONE` (default `America/New_York`), so outside that exact minute it just reports `{"skipped": true}`:
 
 ```bash
 curl -X POST http://127.0.0.1:5050/tasks/send-reminders -H "X-Cron-Secret: <your CRON_SECRET>"
@@ -59,9 +59,9 @@ The daily reminder emails send via Gmail SMTP using an **App Password** (not you
    - `MAIL_PASSWORD` — the 16-character app password Google gave you
    - `MAIL_DEFAULT_SENDER` — usually the same as `MAIL_USERNAME`
 
-### Setting up the daily 8am trigger (GitHub Actions)
+### Setting up the daily 7:35am trigger (GitHub Actions)
 
-Render's free web service tier has no built-in scheduler, so a workflow in this repo (`.github/workflows/daily-reminder.yml`) calls a protected endpoint every hour; the endpoint itself only sends when it's actually 8am in `APP_TIMEZONE`, and tracks who's already been emailed that day, so it's safe to call repeatedly.
+Render's free web service tier has no built-in scheduler, so a workflow in this repo (`.github/workflows/daily-reminder.yml`) calls a protected endpoint at :35 past every hour; the endpoint itself only sends when it's actually 7:35am in `APP_TIMEZONE`, and tracks who's already been emailed that day, so it's safe to call repeatedly.
 
 In this repo's GitHub Settings → Secrets and variables → Actions, add:
 

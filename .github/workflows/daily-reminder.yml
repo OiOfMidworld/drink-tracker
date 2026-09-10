@@ -2,7 +2,7 @@ name: Daily Drink Reminder
 
 on:
   schedule:
-    - cron: "0 * * * *"
+    - cron: "35 * * * *"
   workflow_dispatch: {}
 
 jobs:

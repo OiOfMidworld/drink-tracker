@@ -8,6 +8,9 @@ from .models import User, db
 
 bp = Blueprint("tasks", __name__)
 
+REMINDER_HOUR = 7
+REMINDER_MINUTE = 35
+
 
 @bp.route("/tasks/send-reminders", methods=["POST"])
 def send_reminders():
@@ -18,8 +21,10 @@ def send_reminders():
     tz = ZoneInfo(current_app.config["APP_TIMEZONE"])
     now_local = datetime.now(tz)
 
-    if now_local.hour != 8:
-        return jsonify({"skipped": True, "reason": "not 8am local", "local_time": now_local.isoformat()})
+    if now_local.hour != REMINDER_HOUR or now_local.minute != REMINDER_MINUTE:
+        return jsonify(
+            {"skipped": True, "reason": "not reminder time local", "local_time": now_local.isoformat()}
+        )
 
     today_local = now_local.date()
     yesterday_local = today_local - timedelta(days=1)
