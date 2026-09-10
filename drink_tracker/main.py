@@ -60,26 +60,28 @@ def calendar_view(year, month):
         week_total = sum(entry_map[day]["count"] for day in week if day != 0 and day in entry_map)
         weeks_with_totals.append((week, week_total))
 
-    # Prorate by days elapsed so far this month rather than treating every calendar
-    # row as a full 7-day week — otherwise a partial week (month boundary, or the
-    # current week in progress) is weighted the same as a complete one.
-    elapsed_days_this_month = days_in_month - len(future_days)
+    # Only average over days that were actually logged — an unlogged day is unknown,
+    # not a 0. (A future day can't be logged at all, so it's naturally excluded too.)
+    logged_days_this_month = len(entry_map)
     total_month_drinks = sum(entry["count"] for entry in entry_map.values())
     avg_per_week = (
-        (total_month_drinks / elapsed_days_this_month) * 7 if elapsed_days_this_month else 0
+        (total_month_drinks / logged_days_this_month) * 7 if logged_days_this_month else 0
     )
 
     year_window_start = today - timedelta(days=364)
-    yearly_total = (
-        db.session.query(db.func.coalesce(db.func.sum(Entry.drink_count), 0))
+    yearly_total, logged_days_in_year = (
+        db.session.query(
+            db.func.coalesce(db.func.sum(Entry.drink_count), 0),
+            db.func.count(Entry.id),
+        )
         .filter(
             Entry.user_id == current_user.id,
             Entry.entry_date >= year_window_start,
             Entry.entry_date <= today,
         )
-        .scalar()
+        .one()
     )
-    yearly_avg_per_week = yearly_total / (365 / 7)
+    yearly_avg_per_week = (yearly_total / logged_days_in_year) * 7 if logged_days_in_year else 0
 
     return render_template(
         "calendar.html",
