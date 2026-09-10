@@ -1,7 +1,11 @@
+from datetime import datetime
+
 from flask_login import UserMixin
 from flask_sqlalchemy import SQLAlchemy
 
 db = SQLAlchemy()
+
+JOURNAL_TEXT_MAX_LENGTH = 10000
 
 # Color-coding bands used to display an exact drink count on the calendar.
 CATEGORY_INFO = {
@@ -31,6 +35,9 @@ class User(UserMixin, db.Model):
     entries = db.relationship(
         "Entry", backref="user", lazy=True, cascade="all, delete-orphan"
     )
+    journal_entries = db.relationship(
+        "JournalEntry", backref="user", lazy=True, cascade="all, delete-orphan"
+    )
 
 
 class Entry(db.Model):
@@ -41,4 +48,17 @@ class Entry(db.Model):
 
     __table_args__ = (
         db.UniqueConstraint("user_id", "entry_date", name="uq_user_date"),
+    )
+
+
+class JournalEntry(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
+    entry_date = db.Column(db.Date, nullable=False)
+    text = db.Column(db.Text, nullable=False)
+    created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    __table_args__ = (
+        db.UniqueConstraint("user_id", "entry_date", name="uq_journal_user_date"),
     )

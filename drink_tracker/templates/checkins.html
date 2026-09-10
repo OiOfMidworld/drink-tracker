@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}Check-ins - Drink Tracker{% endblock %}
+{% block content %}
+  <div class="calendar-header">
+    <h1>Check-ins</h1>
+  </div>
+
+  <div class="checkins-sort">
+    <a class="sort-link {{ 'active' if sort != 'oldest' }}" href="{{ url_for('main.checkins', sort='newest') }}">Most Recent</a>
+    <a class="sort-link {{ 'active' if sort == 'oldest' }}" href="{{ url_for('main.checkins', sort='oldest') }}">Oldest</a>
+  </div>
+
+  {% if entries %}
+    <ul class="checkins-list">
+      {% for entry in entries %}
+        <li class="checkin-item">
+          <a class="checkin-date" href="{{ url_for('main.calendar_view', year=entry.entry_date.year, month=entry.entry_date.month, open='%02d'|format(entry.entry_date.day)) }}">
+            {{ entry.entry_date.strftime('%B %d, %Y') }}
+          </a>
+          <p class="checkin-text">{{ entry.text }}</p>
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p class="empty-state">No check-ins yet. Click any day on the calendar to add one.</p>
+  {% endif %}
+{% endblock %}

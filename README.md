@@ -9,6 +9,8 @@ Track daily alcoholic drink counts on a color-coded calendar. Each user has thei
 
 Users can add their email in Settings to get a daily reminder at 8am asking them to log last night's drinks; the link in the email opens the calendar with that day ready to fill in.
 
+Each day can also have a short journal entry (a "check-in"), independent of the drink count. Days with a check-in show a small dot on the calendar. The **Check-ins** tab lists every entry by date, sortable by most recent or oldest.
+
 ## Run locally
 
 ```bash

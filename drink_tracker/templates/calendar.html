@@ -18,6 +18,10 @@
       <span class="swatch swatch-empty"></span>
       no entry
     </span>
+    <span class="legend-item">
+      <span class="journal-dot"></span>
+      has a check-in
+    </span>
   </div>
 
   <div class="calendar-layout">
@@ -47,11 +51,13 @@
               {% else %}
                 {% set iso_date = "%04d-%02d-%02d"|format(year, month, day) %}
                 {% set entry = entry_map.get(day) %}
+                {% set note = journal_map.get(day) %}
                 {% set is_future = day in future_days %}
                 <td
-                  class="day-cell {% if entry %}cat-{{ entry.category }}{% endif %} {% if today.year == year and today.month == month and today.day == day %}today{% endif %} {% if is_future %}future{% endif %}"
+                  class="day-cell {% if entry %}cat-{{ entry.category }}{% endif %} {% if today.year == year and today.month == month and today.day == day %}today{% endif %} {% if is_future %}future{% endif %} {% if note %}has-journal{% endif %}"
                   data-date="{{ iso_date }}"
                   data-count="{{ entry.count if entry else '' }}"
+                  data-note="{{ note or '' }}"
                   {% if is_future %}data-future="true"{% endif %}
                 >
                   <span class="day-number">{{ day }}</span>
@@ -70,6 +76,8 @@
       <h2 id="modal-date"></h2>
       <p class="modal-subtitle">How many drinks did you have?</p>
       <input type="number" id="drink-count-input" class="drink-count-input" min="0" step="1" inputmode="numeric" />
+      <p class="modal-subtitle">Journal entry (optional)</p>
+      <textarea id="journal-input" class="journal-input" rows="4" maxlength="10000" placeholder="How was the day?"></textarea>
       <p id="modal-error" class="error" hidden></p>
       <div class="modal-actions">
         <button type="button" id="cancel-btn" class="btn btn-secondary">Cancel</button>

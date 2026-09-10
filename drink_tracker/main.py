@@ -6,7 +6,7 @@ from flask_login import current_user, login_required
 from sqlalchemy import extract
 
 from .forms import SettingsForm
-from .models import CATEGORY_INFO, Entry, category_for_count, db
+from .models import CATEGORY_INFO, JOURNAL_TEXT_MAX_LENGTH, Entry, JournalEntry, category_for_count, db
 
 bp = Blueprint("main", __name__)
 
@@ -55,6 +55,13 @@ def calendar_view(year, month):
         for entry in entries
     }
 
+    journal_entries = JournalEntry.query.filter(
+        JournalEntry.user_id == current_user.id,
+        extract("year", JournalEntry.entry_date) == year,
+        extract("month", JournalEntry.entry_date) == month,
+    ).all()
+    journal_map = {entry.entry_date.day: entry.text for entry in journal_entries}
+
     weeks_with_totals = []
     for week in weeks:
         week_total = sum(entry_map[day]["count"] for day in week if day != 0 and day in entry_map)
@@ -92,6 +99,7 @@ def calendar_view(year, month):
         avg_per_week=avg_per_week,
         yearly_avg_per_week=yearly_avg_per_week,
         entry_map=entry_map,
+        journal_map=journal_map,
         future_days=future_days,
         category_info=CATEGORY_INFO,
         today=today,
@@ -114,12 +122,20 @@ def settings():
     return render_template("settings.html", form=form)
 
 
+@bp.route("/checkins")
+@login_required
+def checkins():
+    sort = request.args.get("sort", "newest")
+    order = JournalEntry.entry_date.asc() if sort == "oldest" else JournalEntry.entry_date.desc()
+    entries = JournalEntry.query.filter_by(user_id=current_user.id).order_by(order).all()
+    return render_template("checkins.html", entries=entries, sort=sort)
+
+
 @bp.route("/api/log", methods=["POST"])
 @login_required
 def log_day():
     data = request.get_json(silent=True) or {}
     date_str = data.get("date")
-    count = data.get("count")
 
     try:
         entry_date = datetime.strptime(date_str, "%Y-%m-%d").date()
@@ -129,30 +145,45 @@ def log_day():
     if entry_date > date.today():
         return jsonify({"error": "You can't log a future date."}), 400
 
-    entry = Entry.query.filter_by(user_id=current_user.id, entry_date=entry_date).first()
+    response = {"success": True}
 
-    if count is None:
-        if entry:
-            db.session.delete(entry)
-            db.session.commit()
-        return jsonify({"success": True, "count": None})
+    if "count" in data:
+        count = data["count"]
+        entry = Entry.query.filter_by(user_id=current_user.id, entry_date=entry_date).first()
 
-    if not isinstance(count, int) or isinstance(count, bool) or count < 0:
-        return jsonify({"error": "Enter a whole number of 0 or more."}), 400
+        if count is None:
+            if entry:
+                db.session.delete(entry)
+            response["count"] = None
+        else:
+            if not isinstance(count, int) or isinstance(count, bool) or count < 0:
+                return jsonify({"error": "Enter a whole number of 0 or more."}), 400
+            if entry:
+                entry.drink_count = count
+            else:
+                entry = Entry(user_id=current_user.id, entry_date=entry_date, drink_count=count)
+                db.session.add(entry)
+            category = category_for_count(count)
+            response.update({"count": count, "category": category, "color": CATEGORY_INFO[category]["color"]})
 
-    if entry:
-        entry.drink_count = count
-    else:
-        entry = Entry(user_id=current_user.id, entry_date=entry_date, drink_count=count)
-        db.session.add(entry)
+    if "note" in data:
+        note = data["note"]
+        if note is not None and not isinstance(note, str):
+            return jsonify({"error": "Invalid journal entry."}), 400
+        note = (note or "").strip()
+        if len(note) > JOURNAL_TEXT_MAX_LENGTH:
+            return jsonify({"error": f"Journal entry is too long (max {JOURNAL_TEXT_MAX_LENGTH} characters)."}), 400
+
+        journal_entry = JournalEntry.query.filter_by(user_id=current_user.id, entry_date=entry_date).first()
+        if note:
+            if journal_entry:
+                journal_entry.text = note
+            else:
+                journal_entry = JournalEntry(user_id=current_user.id, entry_date=entry_date, text=note)
+                db.session.add(journal_entry)
+        elif journal_entry:
+            db.session.delete(journal_entry)
+        response["note"] = note or None
+
     db.session.commit()
-
-    category = category_for_count(count)
-    return jsonify(
-        {
-            "success": True,
-            "count": count,
-            "category": category,
-            "color": CATEGORY_INFO[category]["color"],
-        }
-    )
+    return jsonify(response)

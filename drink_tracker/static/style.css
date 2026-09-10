@@ -204,6 +204,14 @@ body {
   background: var(--surface);
 }
 
+.journal-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  display: inline-block;
+  background: var(--accent);
+}
+
 .calendar-layout {
   display: flex;
   align-items: flex-start;
@@ -262,12 +270,28 @@ table.calendar th {
 }
 
 .day-cell {
+  position: relative;
   height: 64px;
   border: 1px solid var(--border);
   vertical-align: top;
   padding: 0.3rem;
   cursor: pointer;
   transition: filter 0.1s ease;
+}
+
+.day-cell.has-journal::after {
+  content: "";
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+
+.day-cell.cat-3.has-journal::after {
+  background: #eee;
 }
 
 .day-cell:hover:not(.empty):not(.future) {
@@ -365,7 +389,7 @@ table.calendar th {
   background: var(--surface);
   border-radius: 10px;
   padding: 1.5rem;
-  width: 300px;
+  width: 340px;
   max-width: 90vw;
 }
 
@@ -389,8 +413,73 @@ table.calendar th {
   margin-bottom: 0.6rem;
 }
 
+.journal-input {
+  width: 100%;
+  padding: 0.6rem 0.7rem;
+  font-size: 0.95rem;
+  font-family: inherit;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  margin-bottom: 0.6rem;
+  resize: vertical;
+}
+
 .modal-actions {
   display: flex;
   justify-content: flex-end;
   gap: 0.5rem;
+}
+
+.checkins-sort {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.sort-link {
+  color: var(--text-muted);
+  text-decoration: none;
+  font-size: 0.9rem;
+  padding-bottom: 0.2rem;
+  border-bottom: 2px solid transparent;
+}
+
+.sort-link.active {
+  color: var(--text);
+  font-weight: 600;
+  border-bottom-color: var(--accent);
+}
+
+.checkins-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+.checkin-item {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 1rem 1.2rem;
+}
+
+.checkin-date {
+  display: inline-block;
+  font-weight: 600;
+  color: var(--accent);
+  text-decoration: none;
+  margin-bottom: 0.4rem;
+}
+
+.checkin-text {
+  margin: 0;
+  white-space: pre-wrap;
+  line-height: 1.5;
+}
+
+.empty-state {
+  color: var(--text-muted);
 }

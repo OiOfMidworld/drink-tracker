@@ -4,6 +4,7 @@
 
   const modalDate = document.getElementById("modal-date");
   const countInput = document.getElementById("drink-count-input");
+  const journalInput = document.getElementById("journal-input");
   const modalError = document.getElementById("modal-error");
   const saveBtn = document.getElementById("save-btn");
   const clearBtn = document.getElementById("clear-btn");
@@ -23,6 +24,7 @@
     const [y, m, d] = dateStr.split("-");
     modalDate.textContent = `${m}/${d}/${y}`;
     countInput.value = cell.dataset.count || "";
+    journalInput.value = cell.dataset.note || "";
     modalError.hidden = true;
     modal.hidden = false;
     countInput.focus();
@@ -33,7 +35,7 @@
     activeCell = null;
   }
 
-  async function submitCount(count) {
+  async function submitEntry(payload) {
     if (!activeCell) return;
     const dateStr = activeCell.dataset.date;
 
@@ -44,7 +46,7 @@
           "Content-Type": "application/json",
           "X-CSRFToken": csrfToken,
         },
-        body: JSON.stringify({ date: dateStr, count: count }),
+        body: JSON.stringify({ date: dateStr, ...payload }),
       });
 
       const data = await response.json();
@@ -66,17 +68,21 @@
 
   saveBtn.addEventListener("click", () => {
     const raw = countInput.value.trim();
-    const count = Number(raw);
+    const payload = { note: journalInput.value };
 
-    if (raw === "" || !Number.isInteger(count) || count < 0) {
-      showError("Enter a whole number of 0 or more.");
-      return;
+    if (raw !== "") {
+      const count = Number(raw);
+      if (!Number.isInteger(count) || count < 0) {
+        showError("Enter a whole number of 0 or more.");
+        return;
+      }
+      payload.count = count;
     }
 
-    submitCount(count);
+    submitEntry(payload);
   });
 
-  clearBtn.addEventListener("click", () => submitCount(null));
+  clearBtn.addEventListener("click", () => submitEntry({ count: null }));
   cancelBtn.addEventListener("click", closeModal);
 
   countInput.addEventListener("keydown", (e) => {
