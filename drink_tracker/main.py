@@ -56,15 +56,18 @@ def calendar_view(year, month):
     }
 
     weeks_with_totals = []
-    elapsed_week_totals = []
     for week in weeks:
         week_total = sum(entry_map[day]["count"] for day in week if day != 0 and day in entry_map)
         weeks_with_totals.append((week, week_total))
-        has_started = any(day != 0 and day not in future_days for day in week)
-        if has_started:
-            elapsed_week_totals.append(week_total)
 
-    avg_per_week = sum(elapsed_week_totals) / len(elapsed_week_totals) if elapsed_week_totals else 0
+    # Prorate by days elapsed so far this month rather than treating every calendar
+    # row as a full 7-day week — otherwise a partial week (month boundary, or the
+    # current week in progress) is weighted the same as a complete one.
+    elapsed_days_this_month = days_in_month - len(future_days)
+    total_month_drinks = sum(entry["count"] for entry in entry_map.values())
+    avg_per_week = (
+        (total_month_drinks / elapsed_days_this_month) * 7 if elapsed_days_this_month else 0
+    )
 
     year_window_start = today - timedelta(days=364)
     yearly_total = (
