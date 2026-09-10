@@ -56,15 +56,15 @@ def calendar_view(year, month):
     }
 
     weeks_with_totals = []
+    elapsed_week_totals = []
     for week in weeks:
         week_total = sum(entry_map[day]["count"] for day in week if day != 0 and day in entry_map)
         weeks_with_totals.append((week, week_total))
+        has_started = any(day != 0 and day not in future_days for day in week)
+        if has_started:
+            elapsed_week_totals.append(week_total)
 
-    avg_per_week = (
-        sum(total for _, total in weeks_with_totals) / len(weeks_with_totals)
-        if weeks_with_totals
-        else 0
-    )
+    avg_per_week = sum(elapsed_week_totals) / len(elapsed_week_totals) if elapsed_week_totals else 0
 
     year_window_start = today - timedelta(days=364)
     yearly_total = (
