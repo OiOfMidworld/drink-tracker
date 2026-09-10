@@ -7,6 +7,7 @@ from sqlalchemy import extract
 
 from .forms import SettingsForm
 from .models import CATEGORY_INFO, JOURNAL_TEXT_MAX_LENGTH, Entry, JournalEntry, category_for_count, db
+from .timeutils import local_today
 
 bp = Blueprint("main", __name__)
 
@@ -14,7 +15,7 @@ bp = Blueprint("main", __name__)
 @bp.route("/")
 @login_required
 def index():
-    today = date.today()
+    today = local_today()
     return redirect(url_for("main.calendar_view", year=today.year, month=today.month))
 
 
@@ -24,7 +25,7 @@ def calendar_view(year, month):
     if month < 1 or month > 12 or year < 1900 or year > 3000:
         abort(404)
 
-    today = date.today()
+    today = local_today()
 
     if month == 1:
         prev_year, prev_month = year - 1, 12
@@ -142,7 +143,7 @@ def log_day():
     except (TypeError, ValueError):
         return jsonify({"error": "Invalid date."}), 400
 
-    if entry_date > date.today():
+    if entry_date > local_today():
         return jsonify({"error": "You can't log a future date."}), 400
 
     response = {"success": True}
