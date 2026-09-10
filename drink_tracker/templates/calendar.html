@@ -21,9 +21,15 @@
   </div>
 
   <div class="calendar-layout">
-    <div class="avg-card">
-      <div class="avg-label">Avg / Week</div>
-      <div class="avg-value">{{ "%.1f"|format(avg_per_week) }}</div>
+    <div class="stats-panel">
+      <div class="stat-block">
+        <div class="avg-label">Avg / Week (this month)</div>
+        <div class="avg-value">{{ "%.1f"|format(avg_per_week) }}</div>
+      </div>
+      <div class="stat-block">
+        <div class="avg-label">Avg / Week (last 365 days)</div>
+        <div class="avg-value">{{ "%.1f"|format(yearly_avg_per_week) }}</div>
+      </div>
     </div>
 
     <table class="calendar" data-year="{{ year }}" data-month="{{ month }}">

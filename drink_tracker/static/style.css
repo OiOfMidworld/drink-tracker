@@ -210,14 +210,24 @@ body {
   gap: 1.2rem;
 }
 
-.avg-card {
+.stats-panel {
   flex: 0 0 auto;
-  min-width: 110px;
+  min-width: 130px;
+  display: flex;
+  flex-direction: column;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 10px;
+  overflow: hidden;
+}
+
+.stat-block {
   padding: 1rem 1.2rem;
   text-align: center;
+}
+
+.stat-block + .stat-block {
+  border-top: 1px solid var(--border);
 }
 
 .avg-label {
@@ -291,8 +301,18 @@ table.calendar th {
     flex-direction: column;
   }
 
-  .avg-card {
+  .stats-panel {
     width: 100%;
+    flex-direction: row;
+  }
+
+  .stat-block {
+    flex: 1 1 0;
+  }
+
+  .stat-block + .stat-block {
+    border-top: none;
+    border-left: 1px solid var(--border);
   }
 }
 

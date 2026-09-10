@@ -1,5 +1,5 @@
 import calendar as cal_module
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 
 from flask import Blueprint, abort, flash, jsonify, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
@@ -66,6 +66,18 @@ def calendar_view(year, month):
         else 0
     )
 
+    year_window_start = today - timedelta(days=364)
+    yearly_total = (
+        db.session.query(db.func.coalesce(db.func.sum(Entry.drink_count), 0))
+        .filter(
+            Entry.user_id == current_user.id,
+            Entry.entry_date >= year_window_start,
+            Entry.entry_date <= today,
+        )
+        .scalar()
+    )
+    yearly_avg_per_week = yearly_total / (365 / 7)
+
     return render_template(
         "calendar.html",
         year=year,
@@ -73,6 +85,7 @@ def calendar_view(year, month):
         month_name=cal_module.month_name[month],
         weeks_with_totals=weeks_with_totals,
         avg_per_week=avg_per_week,
+        yearly_avg_per_week=yearly_avg_per_week,
         entry_map=entry_map,
         future_days=future_days,
         category_info=CATEGORY_INFO,
