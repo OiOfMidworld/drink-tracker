@@ -26,7 +26,7 @@ class LoginForm(FlaskForm):
 
 class SettingsForm(FlaskForm):
     email = StringField(
-        "Email (for a daily 7:35am reminder to log last night's drinks)",
+        "Email (for a daily morning reminder to log last night's drinks)",
         validators=[Optional(), Email(), Length(max=255)],
     )
     submit = SubmitField("Save")

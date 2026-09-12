@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime, time, timedelta
 from zoneinfo import ZoneInfo
 
 from flask import Blueprint, current_app, jsonify, request
@@ -8,8 +8,13 @@ from .models import User, db
 
 bp = Blueprint("tasks", __name__)
 
-REMINDER_HOUR = 7
-REMINDER_MINUTE = 35
+# GitHub Actions' `schedule` trigger is best-effort and commonly delayed by
+# 10-30+ minutes, especially under load, so an exact hour:minute match is too
+# fragile — a delayed run just misses the one matching minute entirely. A
+# window is caught by whichever hourly tick lands inside it, and per-user
+# last_reminder_sent_date tracking still keeps it to once a day either way.
+REMINDER_WINDOW_START = time(7, 30)
+REMINDER_WINDOW_END = time(8, 30)
 
 
 @bp.route("/tasks/send-reminders", methods=["POST"])
@@ -21,9 +26,9 @@ def send_reminders():
     tz = ZoneInfo(current_app.config["APP_TIMEZONE"])
     now_local = datetime.now(tz)
 
-    if now_local.hour != REMINDER_HOUR or now_local.minute != REMINDER_MINUTE:
+    if not (REMINDER_WINDOW_START <= now_local.time() < REMINDER_WINDOW_END):
         return jsonify(
-            {"skipped": True, "reason": "not reminder time local", "local_time": now_local.isoformat()}
+            {"skipped": True, "reason": "outside reminder window", "local_time": now_local.isoformat()}
         )
 
     today_local = now_local.date()

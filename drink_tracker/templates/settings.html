@@ -10,7 +10,7 @@
         {{ form.email(size=32, placeholder="you@example.com") }}
         {% for error in form.email.errors %}<p class="error">{{ error }}</p>{% endfor %}
       </div>
-      <p class="field-hint">Every morning at 7:35am, you'll get an email asking if you'd like to log last night's drinks. Leave this blank (or clear it) to turn reminders off.</p>
+      <p class="field-hint">Every morning between 7:30 and 8:30am, you'll get an email asking if you'd like to log last night's drinks. Leave this blank (or clear it) to turn reminders off.</p>
       {{ form.submit(class="btn btn-primary") }}
     </form>
   </div>
