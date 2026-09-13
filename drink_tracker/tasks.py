@@ -13,7 +13,7 @@ bp = Blueprint("tasks", __name__)
 # tolerates trigger jitter; per-user last_reminder_sent_date tracking keeps it to
 # once a day regardless of how many times the trigger fires inside it.
 REMINDER_WINDOW_START = time(10, 0)
-REMINDER_WINDOW_END = time(14, 0)
+REMINDER_WINDOW_END = time(18, 0)
 
 
 @bp.route("/tasks/send-reminders", methods=["POST"])
