@@ -45,6 +45,11 @@ def create_app():
         database_url = database_url.replace("postgres://", "postgresql://", 1)
     app.config["SQLALCHEMY_DATABASE_URI"] = database_url
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+    # Render's Postgres (and most managed Postgres) closes idle connections server-side.
+    # Without pre-ping, SQLAlchemy can hand out a pooled connection that's already been
+    # dropped, surfacing as "SSL SYSCALL error: EOF detected" on the next query — pre-ping
+    # tests each connection before use and transparently reconnects if it's gone stale.
+    app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {"pool_pre_ping": True, "pool_recycle": 280}
 
     app.config["APP_BASE_URL"] = os.environ.get("APP_BASE_URL", "http://127.0.0.1:5050")
     app.config["APP_TIMEZONE"] = os.environ.get("APP_TIMEZONE", "America/New_York")
