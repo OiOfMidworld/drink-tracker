@@ -59,16 +59,27 @@ The daily reminder emails send via Gmail SMTP using an **App Password** (not you
    - `MAIL_PASSWORD` — the 16-character app password Google gave you
    - `MAIL_DEFAULT_SENDER` — usually the same as `MAIL_USERNAME`
 
-### Setting up the daily morning trigger (GitHub Actions)
+### Setting up the daily morning trigger (external cron service)
 
-Render's free web service tier has no built-in scheduler, so a workflow in this repo (`.github/workflows/daily-reminder.yml`) calls a protected endpoint every 15 minutes; the endpoint itself only sends between 7:30 and 8:30am in `APP_TIMEZONE`, and tracks who's already been emailed that day, so it's safe to call repeatedly. The frequent calls (rather than a single once-a-day cron tick) are deliberate — GitHub Actions' `schedule` trigger is best-effort and commonly delayed by 10-30+ minutes, so checking every 15 minutes against a wider window is what actually makes the send reliable.
+Render's free web service tier has no built-in scheduler. This used to be handled by a GitHub Actions workflow, but GitHub's `schedule` trigger turned out to silently throttle frequent cron jobs to run only every few hours regardless of the configured interval (a known platform limitation, not something fixable from this repo) — so it could miss the morning window entirely on a given day. A dedicated free cron-ping service doesn't have that problem.
 
-In this repo's GitHub Settings → Secrets and variables → Actions, add:
+Using **[cron-job.org](https://cron-job.org)** (free, no card required):
 
-- `APP_URL` — your Render service URL (e.g. `https://drink-tracker.onrender.com`), no trailing slash
-- `CRON_SECRET` — copy the value Render generated for the `CRON_SECRET` env var on the web service
+1. Create a free account.
+2. Create a new cron job with:
+   - **URL**: `https://<your-render-url>/tasks/send-reminders` (e.g. `https://drink-tracker-lv0i.onrender.com/tasks/send-reminders`)
+   - **Request method**: `POST`
+   - **Custom header**: `X-Cron-Secret: <value>` — use the `CRON_SECRET` Render generated for the web service (find it in the Render dashboard → the service → Environment tab)
+   - **Schedule**: every 15 minutes (the endpoint itself only actually sends between 7:30 and 8:30am in `APP_TIMEZONE`, and tracks who's already been emailed that day — so calling it every 15 minutes around the clock is harmless, it's a no-op outside the window and safe to repeat inside it)
+3. Save and enable the job.
 
-Once both secrets are set, the workflow runs automatically (or trigger it manually from the Actions tab with "Run workflow" to test it).
+Any other free "ping a URL on a schedule" service (EasyCron, UptimeRobot's monitor-as-a-trigger, etc.) works the same way — same URL, method, and header.
+
+To test manually without waiting for the schedule:
+
+```bash
+curl -X POST https://<your-render-url>/tasks/send-reminders -H "X-Cron-Secret: <your CRON_SECRET>"
+```
 
 ### Deploying without the Blueprint
 
