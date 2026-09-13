@@ -35,14 +35,23 @@ def send_reminders():
 
     users = User.query.filter(User.email.isnot(None), User.email != "").all()
     sent = 0
+    errors = []
     for user in users:
         if user.last_reminder_sent_date == today_local:
             continue
-        send_reminder_email(
-            current_app, user.email, yesterday_local.year, yesterday_local.month, yesterday_local.day
-        )
+        try:
+            send_reminder_email(
+                current_app, user.email, yesterday_local.year, yesterday_local.month, yesterday_local.day
+            )
+        except Exception as exc:
+            current_app.logger.exception("Failed to send reminder email to user %s", user.id)
+            errors.append(f"{type(exc).__name__}: {exc}")
+            continue
         user.last_reminder_sent_date = today_local
         sent += 1
 
     db.session.commit()
-    return jsonify({"success": True, "sent": sent, "local_time": now_local.isoformat()})
+    response = {"success": True, "sent": sent, "local_time": now_local.isoformat()}
+    if errors:
+        response["errors"] = errors[:5]
+    return jsonify(response)
