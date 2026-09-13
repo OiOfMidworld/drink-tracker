@@ -1,6 +1,6 @@
-from flask_mail import Mail, Message
+import requests
 
-mail = Mail()
+RESEND_API_URL = "https://api.resend.com/emails"
 
 
 def send_reminder_email(app, to_email, year, month, day):
@@ -11,5 +11,22 @@ def send_reminder_email(app, to_email, year, month, day):
         f"{link}\n\n"
         "You can turn these emails off anytime from your account settings."
     )
-    message = Message(subject="Log last night's drinks?", recipients=[to_email], body=body)
-    mail.send(message)
+
+    if app.config.get("MAIL_SUPPRESS_SEND"):
+        return
+
+    response = requests.post(
+        RESEND_API_URL,
+        headers={
+            "Authorization": f"Bearer {app.config['RESEND_API_KEY']}",
+            "Content-Type": "application/json",
+        },
+        json={
+            "from": app.config["MAIL_DEFAULT_SENDER"],
+            "to": [to_email],
+            "subject": "Log last night's drinks?",
+            "text": body,
+        },
+        timeout=10,
+    )
+    response.raise_for_status()

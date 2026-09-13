@@ -24,7 +24,7 @@ Visit http://127.0.0.1:5050, register an account, and start logging days by clic
 
 By default, data is stored in a local SQLite file at `instance/drinks.db` (created automatically). Set a `DATABASE_URL` environment variable to point at Postgres instead (used automatically in production, see below).
 
-To test the reminder endpoint locally without real SMTP credentials, set `MAIL_SUPPRESS_SEND=true` — Flask-Mail will skip actually sending. The endpoint only sends between 7:30 and 8:30am in `APP_TIMEZONE` (default `America/New_York`), so outside that window it just reports `{"skipped": true}`:
+To test the reminder endpoint locally without a real Resend API key, set `MAIL_SUPPRESS_SEND=true` — it'll skip actually sending. The endpoint only sends between 7:30 and 8:30am in `APP_TIMEZONE` (default `America/New_York`), so outside that window it just reports `{"skipped": true}`:
 
 ```bash
 curl -X POST http://127.0.0.1:5050/tasks/send-reminders -H "X-Cron-Secret: <your CRON_SECRET>"
@@ -46,18 +46,16 @@ The Blueprint handles `SECRET_KEY`, `DATABASE_URL`, and `CRON_SECRET` for you au
 You'll still need to fill in a few values by hand in the Render dashboard after the first deploy (the Blueprint leaves these blank for you to set):
 
 - `APP_BASE_URL` — the URL Render gives your service (e.g. `https://drink-tracker.onrender.com`), used to build the link in reminder emails.
-- `MAIL_USERNAME` / `MAIL_PASSWORD` / `MAIL_DEFAULT_SENDER` — see **Setting up email reminders** below.
+- `RESEND_API_KEY` — see **Setting up email reminders** below.
 
-### Setting up email reminders (Gmail)
+### Setting up email reminders (Resend)
 
-The daily reminder emails send via Gmail SMTP using an **App Password** (not your normal Gmail password):
+Reminder emails send via [Resend](https://resend.com)'s HTTPS API rather than SMTP — **Render blocks outbound SMTP (ports 25/465/587) on free web services entirely**, so a plain Gmail-SMTP setup will hang every send until it times out. Resend's free tier (100 emails/day) works over HTTPS, which isn't affected by that block.
 
-1. Turn on 2-Step Verification on the Google account you want to send from, if it isn't already: https://myaccount.google.com/security
-2. Go to https://myaccount.google.com/apppasswords and create an app password (name it something like "Drink Tracker").
-3. In Render, set on the web service:
-   - `MAIL_USERNAME` — the full Gmail address
-   - `MAIL_PASSWORD` — the 16-character app password Google gave you
-   - `MAIL_DEFAULT_SENDER` — usually the same as `MAIL_USERNAME`
+1. Create a free account at https://resend.com.
+2. Go to **API Keys** and create one, then set it in Render as `RESEND_API_KEY`.
+3. Without verifying your own domain, Resend only allows sending **from** `onboarding@resend.dev` **to the email address you signed up with** (a sandbox restriction to prevent abuse) — fine for personal use or testing. `MAIL_DEFAULT_SENDER` already defaults to `onboarding@resend.dev` in `render.yaml`.
+4. To send reminders to other users later, verify a domain you own in Resend (Domains → Add Domain, then add the DNS records they give you), and set `MAIL_DEFAULT_SENDER` to an address on that domain.
 
 ### Setting up the daily morning trigger (external cron service)
 

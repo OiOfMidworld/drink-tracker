@@ -5,7 +5,6 @@ from flask_login import LoginManager
 from flask_wtf import CSRFProtect
 from sqlalchemy import inspect, text
 
-from .mailer import mail
 from .models import User, db
 
 login_manager = LoginManager()
@@ -55,18 +54,15 @@ def create_app():
     app.config["APP_TIMEZONE"] = os.environ.get("APP_TIMEZONE", "America/New_York")
     app.config["CRON_SECRET"] = os.environ.get("CRON_SECRET", "")
 
-    app.config["MAIL_SERVER"] = os.environ.get("MAIL_SERVER", "smtp.gmail.com")
-    app.config["MAIL_PORT"] = int(os.environ.get("MAIL_PORT", 587))
-    app.config["MAIL_USE_TLS"] = os.environ.get("MAIL_USE_TLS", "true").lower() == "true"
-    app.config["MAIL_USERNAME"] = os.environ.get("MAIL_USERNAME")
-    app.config["MAIL_PASSWORD"] = os.environ.get("MAIL_PASSWORD")
-    app.config["MAIL_DEFAULT_SENDER"] = os.environ.get("MAIL_DEFAULT_SENDER", app.config["MAIL_USERNAME"])
+    # Render blocks outbound SMTP on free web services, so reminder emails send via
+    # Resend's HTTPS API instead of raw SMTP (see drink_tracker/mailer.py).
+    app.config["RESEND_API_KEY"] = os.environ.get("RESEND_API_KEY")
+    app.config["MAIL_DEFAULT_SENDER"] = os.environ.get("MAIL_DEFAULT_SENDER", "onboarding@resend.dev")
     app.config["MAIL_SUPPRESS_SEND"] = os.environ.get("MAIL_SUPPRESS_SEND", "false").lower() == "true"
 
     db.init_app(app)
     login_manager.init_app(app)
     csrf.init_app(app)
-    mail.init_app(app)
 
     @login_manager.user_loader
     def load_user(user_id):

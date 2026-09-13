@@ -8,12 +8,12 @@ from .models import User, db
 
 bp = Blueprint("tasks", __name__)
 
-# Temporarily set to 10-11am for a live test send (2026-09-13) — revert to
-# 7:30-8:30 once confirmed working. A window rather than an exact minute
-# tolerates trigger jitter; per-user last_reminder_sent_date tracking keeps
-# it to once a day regardless of how many times the trigger fires inside it.
+# Widened for a live test send after switching from SMTP to Resend (2026-09-13) —
+# revert to 7:30-8:30 once confirmed working. A window rather than an exact minute
+# tolerates trigger jitter; per-user last_reminder_sent_date tracking keeps it to
+# once a day regardless of how many times the trigger fires inside it.
 REMINDER_WINDOW_START = time(10, 0)
-REMINDER_WINDOW_END = time(11, 0)
+REMINDER_WINDOW_END = time(14, 0)
 
 
 @bp.route("/tasks/send-reminders", methods=["POST"])

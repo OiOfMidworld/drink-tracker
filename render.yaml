@@ -18,18 +18,10 @@ services:
         value: America/New_York
       - key: APP_BASE_URL
         sync: false
-      - key: MAIL_SERVER
-        value: smtp.gmail.com
-      - key: MAIL_PORT
-        value: 587
-      - key: MAIL_USE_TLS
-        value: "true"
-      - key: MAIL_USERNAME
-        sync: false
-      - key: MAIL_PASSWORD
+      - key: RESEND_API_KEY
         sync: false
       - key: MAIL_DEFAULT_SENDER
-        sync: false
+        value: onboarding@resend.dev
 
 databases:
   - name: drink-tracker-db
