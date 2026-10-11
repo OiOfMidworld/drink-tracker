@@ -39,9 +39,13 @@ def create_app():
     os.makedirs(app.instance_path, exist_ok=True)
     default_db_path = os.path.join(app.instance_path, "drinks.db")
     database_url = os.environ.get("DATABASE_URL", f"sqlite:///{default_db_path}")
-    # Render (and Heroku) hand out "postgres://" URLs, but SQLAlchemy 1.4+ requires "postgresql://".
-    if database_url.startswith("postgres://"):
-        database_url = database_url.replace("postgres://", "postgresql://", 1)
+    # Some hosts hand out "postgres://" URLs, which SQLAlchemy 1.4+ rejects, and a bare
+    # "postgresql://" defaults to the psycopg (v3) driver as of SQLAlchemy 2.1 — so name
+    # psycopg2 explicitly, since that's the driver in requirements.txt.
+    for prefix in ("postgres://", "postgresql://"):
+        if database_url.startswith(prefix):
+            database_url = database_url.replace(prefix, "postgresql+psycopg2://", 1)
+            break
     app.config["SQLALCHEMY_DATABASE_URI"] = database_url
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
     # Render's Postgres (and most managed Postgres) closes idle connections server-side.
